@@ -485,6 +485,10 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		page = lru_to_page(page_list);
 		list_del(&page->lru);
 
+		referenced = page_referenced(page, 1, sc->mem_cgroup);
+        if (referenced)
+            page->my_use_count++;
+
 		if (TestSetPageLocked(page))
 			goto keep;
 
@@ -520,7 +524,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 #ifdef CONFIG_DOUGS_MODE
 		/* In active use or really unfreeable?  Activate it. */
 		if (sc->order <= PAGE_ALLOC_COSTLY_ORDER &&
-					(TestClearPageReferenced(page) || postdecrement_myusecount(page)==0) && page_mapping_inuse(page))
+                                        (referenced || postdecrement_myusecount(page)>0) && page_mapping_inuse(page))
 			goto activate_locked;
 			
 #else /* CONFIG_DOUGS_MODE */
