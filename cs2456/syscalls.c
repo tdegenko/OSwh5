@@ -8,6 +8,7 @@
 struct mem_stats{
     long active,inactive,ref_active,ref_inactive,moved,evicted;
 };
+long moved, evicted;
 asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
     struct mem_stats * stats;
     struct zone * pointer;
@@ -34,6 +35,8 @@ asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
             }
         }
     }
+    stats->moved=moved;
+    stats->evicted=evicted;
     if(copy_to_user(stat,stats,sizeof(struct mem_stats))!=0){
         returns=1;
     }
