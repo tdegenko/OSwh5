@@ -604,8 +604,9 @@ static int prep_new_page(struct page *page, int order, gfp_t gfp_flags)
 		(page->flags & PAGE_FLAGS_CHECK_AT_PREP)))
 		bad_page(page);
 
-
+#ifdef CONFIG_DOUGS_MODE
 	page->my_use_count = 0;
+#endif
 
 	/*
 	 * For now, we report if PG_reserved was found set, but do not
