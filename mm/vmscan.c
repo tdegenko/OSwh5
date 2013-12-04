@@ -529,7 +529,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		page = lru_to_page(page_list);
 		list_del(&page->lru);
 
-		referenced = page_referenced(page, 1, sc->mem_cgroup);
+		referenced = TestClearPageReferenced(page);
 #ifdef CONFIG_DOUGS_MODE
         if (referenced)
             page->my_use_count++;
@@ -973,6 +973,7 @@ static unsigned long shrink_inactive_list(unsigned long max_scan,
 done:
 	local_irq_enable();
 	pagevec_release(&pvec);
+	evicted += nr_reclaimed;
 	return nr_reclaimed;
 }
 
@@ -1162,7 +1163,7 @@ static void shrink_active_list(unsigned long nr_pages, struct zone *zone,
 			if (!reclaim_mapped ||
 			    (total_swap_pages == 0 && PageAnon(page)) ||
 				TestClearPageReferenced(page) ||
-				postdecrement_myusecount(page)
+				postdecrement_myusecount(page) > 0
 			    ) {
 				list_add(&page->lru, &l_active);
 				continue;
@@ -1238,6 +1239,8 @@ static void shrink_active_list(unsigned long nr_pages, struct zone *zone,
 	spin_unlock_irq(&zone->lru_lock);
 
 	pagevec_release(&pvec);
+
+	moved += pgdeactivate;
 }
 
 /*
