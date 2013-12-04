@@ -452,6 +452,50 @@ cannot_free:
 }
 
 #ifdef CONFIG_DOUGS_MODE
+
+#define DOUG_MAX_USE_COUNT 1000
+#define DOUG_WAIT_TIME 100
+
+void dougs_mode_timer_func(unsigned long);
+
+
+struct timer_list dougs_mode_timer = TIMER_INITIALIZER(dougs_mode_timer_func, DOUG_WAIT_TIME, 0);
+
+void dougs_mode_timer_func(unsigned long data){
+	struct zone *z;
+	struct page *p;
+
+	int added = 0;
+	for_each_zone(z){
+		// Skip if potential deadlock
+		if(spin_trylock(&(z->lru_lock))){
+			list_for_each_entry(p,&z->active_list,lru){
+				if(TestClearPageReferenced(p) && p->my_use_count < DOUG_MAX_USE_COUNT){
+					added++;
+					p->my_use_count++;
+				}
+			}
+			list_for_each_entry(p,&z->inactive_list,lru){
+				if(TestClearPageReferenced(p) && p->my_use_count < DOUG_MAX_USE_COUNT){
+					added++;
+					p->my_use_count++;
+				}
+			}
+			spin_unlock(&(z->lru_lock));
+		}
+	}
+
+	printk("DOUG DEBUG: periodic check added %d bits\n",added);
+
+	dougs_mode_timer.expires = DOUG_WAIT_TIME;
+	add_timer(&dougs_mode_timer);
+}
+
+
+void dougs_mode_init_timer(void){
+	dougs_mode_timer_func(0);
+}
+
 unsigned int postdecrement_myusecount(struct page *page){
 	unsigned int ans = page->my_use_count;
 	if(ans > 0) page->my_use_count = ans-1;
