@@ -8,7 +8,8 @@
 struct mem_stats{
     long active,inactive,ref_active,ref_inactive,moved,evicted;
 };
-long moved, evicted;
+long moved=0;
+long evicted=0;
 void all_vm_events(unsigned long *ret);
 asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
     struct mem_stats * stats;
