@@ -530,9 +530,10 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		list_del(&page->lru);
 
 		referenced = page_referenced(page, 1, sc->mem_cgroup);
+#ifdef CONFIG_DOUGS_MODE
         if (referenced)
             page->my_use_count++;
-
+#endif
 		if (TestSetPageLocked(page))
 			goto keep;
 
