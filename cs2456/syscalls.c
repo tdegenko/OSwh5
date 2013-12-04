@@ -9,11 +9,13 @@ struct mem_stats{
     long active,inactive,ref_active,ref_inactive,moved,evicted;
 };
 long moved, evicted;
+void all_vm_events(unsigned long *ret);
 asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
     struct mem_stats * stats;
     struct zone * pointer;
     struct page * pos;
     int returns=0;
+    unsigned long stuffs[NR_VM_EVENT_ITEMS];
     stats=kmalloc(sizeof(struct mem_stats),GFP_USER);
     stats->active=0;
     stats->inactive=0;
@@ -21,6 +23,7 @@ asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
     stats->ref_inactive=0;
     stats->moved=0;
     stats->evicted=0;
+    all_vm_events(stuffs);
     for_each_zone(pointer){
         spin_lock(&(pointer->lru_lock));
         list_for_each_entry(pos,&pointer->active_list,lru){
@@ -37,8 +40,8 @@ asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
         }
         spin_unlock(&(pointer->lru_lock));
     }
-    stats->moved=moved;
-    stats->evicted=evicted;
+    stats->moved=stuffs[PGDEACTIVATE];
+    stats->evicted=stuffs[PGFREE];
     if(copy_to_user(stat,stats,sizeof(struct mem_stats))!=0){
         returns=1;
     }
