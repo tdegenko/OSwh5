@@ -453,8 +453,14 @@ cannot_free:
 
 #ifdef CONFIG_DOUGS_MODE
 
-#define DOUG_MAX_USE_COUNT 1000
-#define DOUG_WAIT_TIME 100
+#define DOUG_MAX_USE_COUNT 100
+#define DOUG_WAIT_TIME 10
+
+void increment_myusecount(struct page *p){
+	if(p->my_use_count < DOUG_MAX_USE_COUNT){
+		p->my_use_count++;
+	}
+}
 
 void dougs_mode_timer_func(unsigned long);
 
@@ -468,20 +474,20 @@ void dougs_mode_timer_func(unsigned long data){
 	int added = 0;
 	for_each_zone(z){
 		// Skip if potential deadlock
-		if(spin_trylock(&(z->lru_lock))){
+		if(spin_trylock_irq(&(z->lru_lock))){
 			list_for_each_entry(p,&z->active_list,lru){
-				if(TestClearPageReferenced(p) && p->my_use_count < DOUG_MAX_USE_COUNT){
+				if(TestClearPageReferenced(p)){
 					added++;
-					p->my_use_count++;
+					increment_myusecount(p);
 				}
 			}
 			list_for_each_entry(p,&z->inactive_list,lru){
-				if(TestClearPageReferenced(p) && p->my_use_count < DOUG_MAX_USE_COUNT){
+				if(TestClearPageReferenced(p)){
 					added++;
-					p->my_use_count++;
+					increment_myusecount(p);
 				}
 			}
-			spin_unlock(&(z->lru_lock));
+			spin_unlock_irq(&(z->lru_lock));
 		}
 	}
 
@@ -532,7 +538,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		referenced = TestClearPageReferenced(page);
 #ifdef CONFIG_DOUGS_MODE
         if (referenced)
-            page->my_use_count++;
+		increment_myusecount(page);
 #endif
 		if (TestSetPageLocked(page))
 			goto keep;
