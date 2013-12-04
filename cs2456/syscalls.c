@@ -22,6 +22,7 @@ asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
     stats->moved=0;
     stats->evicted=0;
     for_each_zone(pointer){
+        spin_lock_irq(pointer->lru_lock);
         list_for_each_entry(pos,&pointer->active_list,lru){
             stats->active++;
             if(PageReferenced(pos)){
@@ -34,6 +35,7 @@ asmlinkage long sys_cs2456_memstat(struct mem_stats * stat){
                 stats->ref_inactive++;
             }
         }
+        spin_unlock_irq(pointer->lru_lock);
     }
     stats->moved=moved;
     stats->evicted=evicted;
