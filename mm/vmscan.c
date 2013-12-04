@@ -485,7 +485,7 @@ void dougs_mode_timer_func(unsigned long data){
 		}
 	}
 
-	printk("DOUG DEBUG: periodic check added %d bits\n",added);
+//	printk("DOUG DEBUG: periodic check added %d bits\n",added);
 
 	dougs_mode_timer.expires = jiffies+DOUG_WAIT_TIME;
 	add_timer(&dougs_mode_timer);
