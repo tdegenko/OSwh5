@@ -5,10 +5,10 @@ The system call was implemented based on the existing detail in the vm_event cod
 and manual searches through each page utilizing the active and inactive lists in 
 each zone.
 
-    Active and Inactive page totals were aquired by a simple count of each page in 
+    Active and Inactive page totals were acquired by a simple count of each page in 
     the active or inactive list of each zone.
 
-    Active Refferenced and Inactive Refferenced pages were found on the same pass by 
+    Active Referenced and Inactive Referenced pages were found on the same pass by 
     incrementing the counter only when the referenced bit for the page was set.
 
     Evicted and Moved pages were taken from the global vm_stat variable.
@@ -22,10 +22,10 @@ checks in the active and inactive lists.
 There were two test cases constructed.  The first to modify active referenced, and 
 inactive referenced counts and the second to test all other counts.
     The first worked by memory mapping a file and then reading from it.  This results 
-    in the pages alocated to the file being marked as refferenced, and epending on the 
+    in the pages allocated to the file being marked as referenced, and depending on the 
     frequency of the reads they can be in either the active or inactive lists when marked.
 
-    The second worked by repeatedly mallocing memory untill the kernel had to make it 
+    The second worked by repeatedly mallocing memory until the kernel had to make it 
     inactive, and then eventually evict it.
 
 We combined these two tests into one program, which we used to compare the overall efficacy
